@@ -170,26 +170,30 @@
 </div>
 
 <script>
+// trip: [min,max] kA trip-setting range (or {voltage:[min,max]} for dual-voltage DVM), from the datasheet's
+// "Standard bidirectional direct acting trip device" setting ranges (combined span across all sub-ranges A1..B2/A4).
+// break: [min,max] kA breaking-capacity range (or {voltage:[min,max]} for DVM), from the min/max of the
+// datasheet's tau1..tau4 rated short-circuit making & breaking capacity values for that model.
 const MODELS = [
-  {code:"IR3015 VV 09L", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:1500, scc:{900:30}, sccPeak:{900:42}, weight:44, tempMin:-30, tempMax:70},
-  {code:"IR3030 VV 09L", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:3000, scc:{900:30}, sccPeak:{900:42}, weight:54, tempMin:-30, tempMax:70},
-  {code:"IR3015 VV 09M", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:1500, scc:{900:50}, sccPeak:{900:70}, weight:44, tempMin:-30, tempMax:70},
-  {code:"IR3030 VV 09M", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:3000, scc:{900:50}, sccPeak:{900:70}, weight:54, tempMin:-30, tempMax:70},
-  {code:"IR3015 VV 18M", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:2300, thermal:1500, scc:{1800:30}, sccPeak:{1800:42}, weight:44, tempMin:-30, tempMax:70},
-  {code:"IR3030 VV 18M", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:2300, thermal:3000, scc:{1800:30}, sccPeak:{1800:42}, weight:54, tempMin:-30, tempMax:70},
+  {code:"IR3015 VV 09L", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:1500, scc:{900:30}, sccPeak:{900:42}, weight:44, tempMin:-30, tempMax:70, trip:[1,6], break:[30,30]},
+  {code:"IR3030 VV 09L", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:3000, scc:{900:30}, sccPeak:{900:42}, weight:54, tempMin:-30, tempMax:70, trip:[1,6], break:[30,30]},
+  {code:"IR3015 VV 09M", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:1500, scc:{900:50}, sccPeak:{900:70}, weight:44, tempMin:-30, tempMax:70, trip:[1,6], break:[30,50]},
+  {code:"IR3030 VV 09M", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:3000, scc:{900:50}, sccPeak:{900:70}, weight:54, tempMin:-30, tempMax:70, trip:[1,6], break:[30,50]},
+  {code:"IR3015 VV 18M", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:2300, thermal:1500, scc:{1800:30}, sccPeak:{1800:42}, weight:44, tempMin:-30, tempMax:70, trip:[1,6], break:[30,30]},
+  {code:"IR3030 VV 18M", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:2300, thermal:3000, scc:{1800:30}, sccPeak:{1800:42}, weight:54, tempMin:-30, tempMax:70, trip:[1,6], break:[30,30]},
 
-  {code:"IR4030 VH 18M", family:"IR 4000 SERIES VH", image:"images/ir4000-vh.png", mount:"Horizontal", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:3000, scc:{1800:100}, sccPeak:{1800:140}, weight:190, tempMin:-40, tempMax:70},
-  {code:"IR4045 VH 18M", family:"IR 4000 SERIES VH", image:"images/ir4000-vh.png", mount:"Horizontal", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:4500, scc:{1800:100}, sccPeak:{1800:140}, weight:215, tempMin:-40, tempMax:70},
-  {code:"IR4030 VH 36M", family:"IR 4000 SERIES VH", image:"images/ir4000-vh.png", mount:"Horizontal", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:3000, scc:{3600:55}, sccPeak:{3600:77}, weight:190, tempMin:-40, tempMax:70},
-  {code:"IR4045 VH 36M", family:"IR 4000 SERIES VH", image:"images/ir4000-vh.png", mount:"Horizontal", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:4500, scc:{3600:55}, sccPeak:{3600:77}, weight:215, tempMin:-40, tempMax:70},
+  {code:"IR4030 VH 18M", family:"IR 4000 SERIES VH", image:"images/ir4000-vh.png", mount:"Horizontal", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:3000, scc:{1800:100}, sccPeak:{1800:140}, weight:190, tempMin:-40, tempMax:70, trip:[0.9,4.7], break:[35,100]},
+  {code:"IR4045 VH 18M", family:"IR 4000 SERIES VH", image:"images/ir4000-vh.png", mount:"Horizontal", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:4500, scc:{1800:100}, sccPeak:{1800:140}, weight:215, tempMin:-40, tempMax:70, trip:[0.9,4.7], break:[35,100]},
+  {code:"IR4030 VH 36M", family:"IR 4000 SERIES VH", image:"images/ir4000-vh.png", mount:"Horizontal", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:3000, scc:{3600:55}, sccPeak:{3600:77}, weight:190, tempMin:-40, tempMax:70, trip:[0.9,4.7], break:[50,55]},
+  {code:"IR4045 VH 36M", family:"IR 4000 SERIES VH", image:"images/ir4000-vh.png", mount:"Horizontal", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:4500, scc:{3600:55}, sccPeak:{3600:77}, weight:215, tempMin:-40, tempMax:70, trip:[0.9,4.7], break:[50,55]},
 
-  {code:"IR4030 VH DVM", family:"IR 4000 SERIES VH DVM", image:"images/ir4000-vh-dvm.png", mount:"Horizontal", voltages:[1800,3600], maxVoltage:4000, insulation:3700, thermal:3000, scc:{1800:100,3600:55}, sccPeak:{1800:140,3600:77}, weight:190, tempMin:-40, tempMax:70, dual:true},
-  {code:"IR4045 VH DVM", family:"IR 4000 SERIES VH DVM", image:"images/ir4000-vh-dvm.png", mount:"Horizontal", voltages:[1800,3600], maxVoltage:4000, insulation:3700, thermal:4500, scc:{1800:100,3600:55}, sccPeak:{1800:140,3600:77}, weight:215, tempMin:-40, tempMax:70, dual:true},
+  {code:"IR4030 VH DVM", family:"IR 4000 SERIES VH DVM", image:"images/ir4000-vh-dvm.png", mount:"Horizontal", voltages:[1800,3600], maxVoltage:4000, insulation:3700, thermal:3000, scc:{1800:100,3600:55}, sccPeak:{1800:140,3600:77}, weight:190, tempMin:-40, tempMax:70, dual:true, trip:{1800:[3.2,5.0],3600:[2.0,3.2]}, break:{1800:[35,100],3600:[50,55]}},
+  {code:"IR4045 VH DVM", family:"IR 4000 SERIES VH DVM", image:"images/ir4000-vh-dvm.png", mount:"Horizontal", voltages:[1800,3600], maxVoltage:4000, insulation:3700, thermal:4500, scc:{1800:100,3600:55}, sccPeak:{1800:140,3600:77}, weight:215, tempMin:-40, tempMax:70, dual:true, trip:{1800:[3.2,5.0],3600:[2.0,3.2]}, break:{1800:[35,100],3600:[50,55]}},
 
-  {code:"IR4030 VV 18M", family:"IR 4000 SERIES VV", image:"images/ir4000-vv.png", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:3000, scc:{1800:100}, sccPeak:{1800:140}, weight:165, tempMin:-30, tempMax:70},
-  {code:"IR4045 VV 18M", family:"IR 4000 SERIES VV", image:"images/ir4000-vv.png", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:4500, scc:{1800:100}, sccPeak:{1800:140}, weight:185, tempMin:-30, tempMax:70},
-  {code:"IR4030 VV 36M", family:"IR 4000 SERIES VV", image:"images/ir4000-vv.png", mount:"Vertical", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:3000, scc:{3600:55}, sccPeak:{3600:77}, weight:165, tempMin:-30, tempMax:70},
-  {code:"IR4045 VV 36M", family:"IR 4000 SERIES VV", image:"images/ir4000-vv.png", mount:"Vertical", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:4500, scc:{3600:55}, sccPeak:{3600:77}, weight:185, tempMin:-30, tempMax:70},
+  {code:"IR4030 VV 18M", family:"IR 4000 SERIES VV", image:"images/ir4000-vv.png", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:3000, scc:{1800:100}, sccPeak:{1800:140}, weight:165, tempMin:-30, tempMax:70, trip:[0.9,4.7], break:[35,100]},
+  {code:"IR4045 VV 18M", family:"IR 4000 SERIES VV", image:"images/ir4000-vv.png", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:4500, scc:{1800:100}, sccPeak:{1800:140}, weight:185, tempMin:-30, tempMax:70, trip:[0.9,4.7], break:[35,100]},
+  {code:"IR4030 VV 36M", family:"IR 4000 SERIES VV", image:"images/ir4000-vv.png", mount:"Vertical", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:3000, scc:{3600:55}, sccPeak:{3600:77}, weight:165, tempMin:-30, tempMax:70, trip:[0.9,4.7], break:[50,55]},
+  {code:"IR4045 VV 36M", family:"IR 4000 SERIES VV", image:"images/ir4000-vv.png", mount:"Vertical", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:4500, scc:{3600:55}, sccPeak:{3600:77}, weight:185, tempMin:-30, tempMax:70, trip:[0.9,4.7], break:[50,55]},
 ];
 
 const CONTROL_VOLTAGES = [24,36,48,72,110];
@@ -334,6 +338,38 @@ function modelMatches(m, a, opts={}){
 let bestFit = null;
 let relaxedNote = null;
 let auxVoltage = null;
+let breakingCapacity = null;
+let trippingPoint = null;
+
+// Resolves a model's trip/break range for the voltage actually in play (handles the DVM
+// per-voltage {1800:[...], 3600:[...]} shape as well as the plain [min,max] shape).
+function getRange(m, field){
+  const r = m[field];
+  if(!r) return null;
+  if(Array.isArray(r)) return r;
+  const v = answers.voltage !== undefined && r[answers.voltage] !== undefined ? answers.voltage : Object.keys(r)[0];
+  return r[v];
+}
+
+// Samples 5 evenly-spaced values across [min,max]. If the datasheet range is a single fixed
+// value (min===max), synthesizes a small spread so the picker still offers 5 distinct options.
+function rangeLabel(range){
+  return range[0] === range[1] ? `around ${range[0]}` : `${range[0]}–${range[1]}`;
+}
+
+function sampleRange(range, decimals){
+  let [lo, hi] = range;
+  if(hi - lo < Math.max(lo * 0.05, 0.05)){
+    const spread = lo > 0 ? lo * 0.15 : 1;
+    lo = Math.max(0, lo - spread/2);
+    hi = hi + spread/2;
+  }
+  const vals = [];
+  for(let i=0;i<5;i++){
+    vals.push(Number((lo + (hi-lo)*i/4).toFixed(decimals)));
+  }
+  return vals;
+}
 
 function computeBestFit(){
   let matches = countMatches(answers);
@@ -364,6 +400,8 @@ function computeBestFit(){
 
   bestFit = matches.length ? matches[0] : null;
   auxVoltage = null;
+  breakingCapacity = null;
+  trippingPoint = null;
 }
 
 function prettyRelax(key){
@@ -443,9 +481,9 @@ function renderBestFit(){
 
 function renderAuxStep(){
   let html = `<div class="reveal-stagger">`;
-  html += `<div class="q-label">Final step</div>
+  html += `<div class="q-label">Unique code · Step 1 of 3</div>
     <div class="q-title">What auxiliary/control circuit voltage (Uc) does your application use?</div>
-    <div class="q-hint">This is the last configuration detail needed to determine the exact orderable unique code for the ${bestFit.code} (${bestFit.family}).</div>`;
+    <div class="q-hint">The first of three configuration details needed to determine the exact orderable unique code for the ${bestFit.code} (${bestFit.family}).</div>`;
 
   html += '<div class="options">';
   CONTROL_VOLTAGES.forEach((v,i)=>{
@@ -459,7 +497,7 @@ function renderAuxStep(){
 
   html += `<div class="nav">
       <button type="button" class="ghost" id="backBtn3">← Back</button>
-      <button type="button" class="primary" id="revealBtn" ${auxVoltage===null?'disabled':''}>Reveal unique code →</button>
+      <button type="button" class="primary" id="nextAuxBtn" ${auxVoltage===null?'disabled':''}>Next →</button>
     </div>`;
   html += `</div>`;
 
@@ -472,22 +510,97 @@ function renderAuxStep(){
     });
   });
   document.getElementById('backBtn3').addEventListener('click', renderBestFit);
-  document.getElementById('revealBtn').addEventListener('click', ()=>{ if(auxVoltage!==null) renderFinalCode(); });
+  document.getElementById('nextAuxBtn').addEventListener('click', ()=>{ if(auxVoltage!==null) renderBreakingStep(); });
 }
 
-function generateUniqueCode(code, uc){
-  return code.replace(/ /g, '-') + '-UC' + uc;
+function renderBreakingStep(){
+  const range = getRange(bestFit, 'break');
+  const options = sampleRange(range, 1);
+
+  let html = `<div class="reveal-stagger">`;
+  html += `<div class="q-label">Unique code · Step 2 of 3</div>
+    <div class="q-title">What short-circuit breaking capacity does this configuration need?</div>
+    <div class="q-hint">Sampled from the ${bestFit.code}'s rated breaking capacity (${rangeLabel(range)} kA across its τ1–τ4 duty points).</div>`;
+
+  html += '<div class="options">';
+  options.forEach((v,i)=>{
+    const sel = breakingCapacity === v;
+    html += `<button type="button" class="opt${sel?' selected':''}" data-index="${i}">
+      <span class="radio"></span>
+      <span class="otext"><span class="oname">${v} kA</span></span>
+    </button>`;
+  });
+  html += '</div>';
+
+  html += `<div class="nav">
+      <button type="button" class="ghost" id="backBtn5">← Back</button>
+      <button type="button" class="primary" id="nextBreakBtn" ${breakingCapacity===null?'disabled':''}>Next →</button>
+    </div>`;
+  html += `</div>`;
+
+  showPhase(html);
+
+  document.querySelectorAll('#results .opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      breakingCapacity = options[Number(btn.dataset.index)];
+      renderBreakingStep();
+    });
+  });
+  document.getElementById('backBtn5').addEventListener('click', renderAuxStep);
+  document.getElementById('nextBreakBtn').addEventListener('click', ()=>{ if(breakingCapacity!==null) renderTrippingStep(); });
+}
+
+function renderTrippingStep(){
+  const range = getRange(bestFit, 'trip');
+  const options = sampleRange(range, 2);
+
+  let html = `<div class="reveal-stagger">`;
+  html += `<div class="q-label">Unique code · Step 3 of 3</div>
+    <div class="q-title">What tripping point does this configuration need?</div>
+    <div class="q-hint">Sampled from the ${bestFit.code}'s direct acting trip device setting (${rangeLabel(range)} kA).</div>`;
+
+  html += '<div class="options">';
+  options.forEach((v,i)=>{
+    const sel = trippingPoint === v;
+    html += `<button type="button" class="opt${sel?' selected':''}" data-index="${i}">
+      <span class="radio"></span>
+      <span class="otext"><span class="oname">${v} kA</span></span>
+    </button>`;
+  });
+  html += '</div>';
+
+  html += `<div class="nav">
+      <button type="button" class="ghost" id="backBtn6">← Back</button>
+      <button type="button" class="primary" id="revealBtn" ${trippingPoint===null?'disabled':''}>Reveal unique code →</button>
+    </div>`;
+  html += `</div>`;
+
+  showPhase(html);
+
+  document.querySelectorAll('#results .opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      trippingPoint = options[Number(btn.dataset.index)];
+      renderTrippingStep();
+    });
+  });
+  document.getElementById('backBtn6').addEventListener('click', renderBreakingStep);
+  document.getElementById('revealBtn').addEventListener('click', ()=>{ if(trippingPoint!==null) renderFinalCode(); });
+}
+
+function generateUniqueCode(code, uc, bc, tp){
+  return code.replace(/ /g, '-') + '-UC' + uc + '-BC' + bc + '-TP' + tp;
 }
 
 function renderFinalCode(){
   const m = bestFit;
-  const code = generateUniqueCode(m.code, auxVoltage);
+  const code = generateUniqueCode(m.code, auxVoltage, breakingCapacity, trippingPoint);
 
   let html = `<div class="reveal-stagger">`;
   html += `<div><span class="badge-tag">Unique code selected</span></div>`;
-  html += `<div class="aux-summary">${m.family} · ${m.code} · Auxiliary voltage ${auxVoltage} Vdc</div>`;
+  html += `<div class="aux-summary">${m.family} · ${m.code}</div>`;
+  html += `<div class="aux-summary">Auxiliary voltage ${auxVoltage} Vdc · Breaking capacity ${breakingCapacity} kA · Tripping point ${trippingPoint} kA</div>`;
   html += `<div class="code-display">${code}</div>`;
-  html += `<div class="note-box">This unique code is a system-generated reference (not the manufacturer's official ordering code) built from the commercial code and auxiliary voltage. Confirm the exact part number with the manufacturer before ordering.</div>`;
+  html += `<div class="note-box">This unique code is a system-generated reference (not the manufacturer's official ordering code) built from the commercial code, auxiliary voltage, breaking capacity and tripping point. Confirm the exact part number with the manufacturer before ordering.</div>`;
   html += `<div class="nav" style="margin-top:8px;">
       <button type="button" class="ghost" id="backBtn4">← Back</button>
       <button type="button" class="primary" id="restartBtn2">Start over</button>
@@ -495,7 +608,7 @@ function renderFinalCode(){
   html += `</div>`;
 
   showPhase(html);
-  document.getElementById('backBtn4').addEventListener('click', renderAuxStep);
+  document.getElementById('backBtn4').addEventListener('click', renderTrippingStep);
   document.getElementById('restartBtn2').addEventListener('click', ()=>{ answers = {}; current = 0; renderStep(); });
 }
 
