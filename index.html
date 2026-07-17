@@ -793,7 +793,7 @@ function renderFinalCode(){
 
   showPhase(html);
   document.getElementById('backBtn4').addEventListener('click', renderTrippingStep);
-  document.getElementById('restartBtn2').addEventListener('click', ()=>{ answers = {}; current = 0; priceRevealed = false; statusRevealed = false; configA = null; renderStep(); });
+  document.getElementById('restartBtn2').addEventListener('click', ()=>{ answers = {}; current = 0; priceRevealed = false; statusRevealed = false; configA = null; renderLanding(); });
   document.getElementById('checkPriceBtn').addEventListener('click', ()=>{ priceRevealed = true; renderFinalCode(); });
   document.getElementById('checkStatusBtn').addEventListener('click', ()=>{ statusRevealed = true; renderFinalCode(); });
   document.getElementById('genDatasheetBtn').addEventListener('click', ()=>{
@@ -868,7 +868,7 @@ function renderComparison(){
   });
   document.getElementById('restartBtn3').addEventListener('click', ()=>{
     answers = {}; current = 0; configA = null; priceRevealed = false; statusRevealed = false;
-    renderStep();
+    renderLanding();
   });
   const datasheetBtns = document.querySelectorAll('#results .gen-datasheet-btn');
   datasheetBtns[0].addEventListener('click', ()=> generateDatasheet(m, configA, 'Configuration A'));
@@ -877,12 +877,31 @@ function renderComparison(){
 
 function wireResultNav(){
   const restartBtn = document.getElementById('restartBtn');
-  if(restartBtn) restartBtn.addEventListener('click', ()=>{ answers = {}; current = 0; renderStep(); });
+  if(restartBtn) restartBtn.addEventListener('click', ()=>{ answers = {}; current = 0; renderLanding(); });
   const backBtn2 = document.getElementById('backBtn2');
   if(backBtn2) backBtn2.addEventListener('click', ()=>{ current = activeSteps().length-1; renderStep(); });
 }
 
-renderStep();
+function renderLanding(){
+  document.getElementById('progress').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+  const wizard = document.getElementById('wizard');
+  wizard.style.display = 'block';
+  wizard.innerHTML = `<div class="reveal-stagger">
+      <div class="q-label">Get started</div>
+      <div class="q-title">Ready to find your breaker?</div>
+      <div class="q-hint">We'll ask about operating voltage, thermal current, and mounting to identify the right family code, then walk through auxiliary voltage, breaking capacity and tripping point to generate its unique configuration code.</div>
+      <div class="nav" style="justify-content:flex-end; margin-top:22px;">
+        <button type="button" class="primary" id="startBtn">Start →</button>
+      </div>
+    </div>`;
+  document.getElementById('startBtn').addEventListener('click', ()=>{
+    document.getElementById('progress').style.display = 'flex';
+    answers = {}; current = 0; renderStep();
+  });
+}
+
+renderLanding();
 </script>
 </body>
 </html>
