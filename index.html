@@ -192,14 +192,10 @@ const STEPS = [
     ]
   },
   {
-    key:"thermal", type:"choice",
-    title:"What continuous (thermal) current will the breaker carry?",
-    hint:"Choose the closest band to your circuit's continuous rated current — we'll pick a breaker rated at or above it.",
-    options:[
-      {value:1500, name:"Up to 1500 A", desc:""},
-      {value:3000, name:"1500 – 3000 A", desc:""},
-      {value:4500, name:"3000 – 4500 A", desc:""},
-    ]
+    key:"thermal", type:"number",
+    title:"What is the continuous (thermal) current of your circuit?",
+    hint:"Enter the specific continuous current your circuit will carry — we'll pick a breaker rated at or above it.",
+    unit:"A", placeholder:"e.g. 2500"
   },
   {
     key:"mount", type:"choice",
@@ -216,15 +212,6 @@ const STEPS = [
     title:"What short-circuit breaking capacity do you need?",
     hint:"The minimum rated short-circuit making/breaking capacity (τ₁, kA) required for protection coordination. Leave blank if unknown.",
     unit:"kA", placeholder:"e.g. 40"
-  },
-  {
-    key:"tempMin", type:"choice",
-    title:"What's the minimum ambient operating temperature?",
-    hint:"Some variants are rated down to -40°C, others to -30°C.",
-    options:[
-      {value:-30, name:"-30°C or higher", desc:"Standard range"},
-      {value:-40, name:"As low as -40°C", desc:"Extended cold-climate range"},
-    ]
   },
 ];
 
@@ -347,9 +334,6 @@ function modelMatches(m, a, opts={}){
     const sccVal = m.scc[voltageForScc];
     if(sccVal === undefined || sccVal < a.scc) return false;
   }
-  if(a.tempMin !== undefined && !relax.tempMin){
-    if(m.tempMin > a.tempMin) return false;
-  }
   return true;
 }
 
@@ -363,9 +347,9 @@ function renderResults(){
   let relaxedNote = null;
 
   if(matches.length === 0){
-    // progressively relax least-critical constraints: tempMin, then (if the customer said "no dual-voltage
-    // needed") allow DVM as a safe superset, then scc, then mount
-    const relaxOrder = [{tempMin:true}];
+    // progressively relax least-critical constraints: (if the customer said "no dual-voltage needed")
+    // allow DVM as a safe superset first, then scc, then mount
+    const relaxOrder = [];
     if(answers.dualVoltage === false) relaxOrder.push({dualVoltage:true});
     relaxOrder.push({scc:true}, {mount:true});
     let relax = {};
@@ -425,11 +409,11 @@ function renderResults(){
 
   el.innerHTML = html;
   document.getElementById('restartBtn').addEventListener('click', ()=>{ answers = {}; current = 0; renderStep(); });
-  document.getElementById('backBtn2').addEventListener('click', ()=>{ current = STEPS.length-1; renderStep(); });
+  document.getElementById('backBtn2').addEventListener('click', ()=>{ current = activeSteps().length-1; renderStep(); });
 }
 
 function prettyRelax(key){
-  return {tempMin:"minimum temperature", scc:"short-circuit capacity", mount:"mounting orientation", dualVoltage:"the single-voltage-only preference (a dual-voltage unit was allowed as a fallback)"}[key] || key;
+  return {scc:"short-circuit capacity", mount:"mounting orientation", dualVoltage:"the single-voltage-only preference (a dual-voltage unit was allowed as a fallback)"}[key] || key;
 }
 
 function summarizeAnswers(){
@@ -440,7 +424,6 @@ function summarizeAnswers(){
   if(answers.thermal !== undefined) parts.push(`≥${answers.thermal} A thermal`);
   if(answers.mount !== undefined && answers.mount !== 'any') parts.push(`${answers.mount.toLowerCase()} mounting`);
   if(answers.scc) parts.push(`≥${answers.scc} kA SCC`);
-  if(answers.tempMin !== undefined) parts.push(`down to ${answers.tempMin}°C`);
   return "Based on: " + (parts.length ? parts.join(' · ') : 'your requirements');
 }
 
