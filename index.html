@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HSCB Selector — High-Speed Circuit Breaker Finder</title>
+<style>
+  :root{
+    --bg:#f4f6f8; --panel:#ffffff; --text:#1a2430; --muted:#5b6b7a;
+    --border:#dde3e8; --accent:#c8102e; --accent-dark:#9c0c22;
+    --accent-soft:#fdecef; --ok:#1e8e5a; --ok-soft:#e8f6ef;
+    --track:#e3e8ec; --shadow: 0 2px 10px rgba(20,30,40,0.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#12161a; --panel:#1b2126; --text:#e8edf1; --muted:#95a3ae;
+      --border:#2c353c; --accent:#ff4d5e; --accent-dark:#ff6b79;
+      --accent-soft:#2a171b; --ok:#3ddc8b; --ok-soft:#123024;
+      --track:#2a3339; --shadow: 0 2px 14px rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12161a; --panel:#1b2126; --text:#e8edf1; --muted:#95a3ae;
+    --border:#2c353c; --accent:#ff4d5e; --accent-dark:#ff6b79;
+    --accent-soft:#2a171b; --ok:#3ddc8b; --ok-soft:#123024;
+    --track:#2a3339; --shadow: 0 2px 14px rgba(0,0,0,0.4);
+  }
+  :root[data-theme="light"]{
+    --bg:#f4f6f8; --panel:#ffffff; --text:#1a2430; --muted:#5b6b7a;
+    --border:#dde3e8; --accent:#c8102e; --accent-dark:#9c0c22;
+    --accent-soft:#fdecef; --ok:#1e8e5a; --ok-soft:#e8f6ef;
+    --track:#e3e8ec; --shadow: 0 2px 10px rgba(20,30,40,0.06);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:840px; margin:0 auto; padding:32px 20px 80px;}
+  header.top{margin-bottom:28px;}
+  .eyebrow{color:var(--accent); font-weight:700; font-size:12.5px; letter-spacing:.08em; text-transform:uppercase;}
+  h1{font-size:26px; margin:6px 0 6px; line-height:1.25;}
+  .sub{color:var(--muted); font-size:14.5px; max-width:56ch;}
+
+  .progress{display:flex; gap:6px; margin:22px 0 26px;}
+  .progress .seg{flex:1; height:4px; border-radius:3px; background:var(--track); overflow:hidden;}
+  .progress .seg.done, .progress .seg.active{background:var(--accent);}
+
+  .panel{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    padding:26px 26px 22px; box-shadow:var(--shadow);
+  }
+  .q-label{font-size:11.5px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px;}
+  .q-title{font-size:19px; font-weight:650; margin:0 0 4px;}
+  .q-hint{color:var(--muted); font-size:13.5px; margin:0 0 20px;}
+
+  .options{display:grid; gap:10px;}
+  .opt{
+    display:flex; align-items:center; gap:12px; padding:14px 16px; border:1px solid var(--border);
+    border-radius:10px; cursor:pointer; background:transparent; text-align:left; width:100%;
+    font-size:15px; color:var(--text); transition:border-color .12s, background .12s;
+  }
+  .opt:hover{border-color:var(--accent);}
+  .opt.selected{border-color:var(--accent); background:var(--accent-soft);}
+  .opt .radio{
+    width:18px; height:18px; border-radius:50%; border:2px solid var(--border); flex:0 0 18px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .opt.selected .radio{border-color:var(--accent);}
+  .opt.selected .radio::after{content:""; width:9px; height:9px; border-radius:50%; background:var(--accent);}
+  .opt .otext{flex:1;}
+  .opt .oname{font-weight:600;}
+  .opt .odesc{color:var(--muted); font-size:12.5px; margin-top:1px;}
+
+  .num-row{display:flex; gap:10px; align-items:center; margin-bottom:6px;}
+  input[type=number]{
+    flex:1; font-size:17px; padding:12px 14px; border-radius:10px; border:1px solid var(--border);
+    background:var(--bg); color:var(--text); width:100%;
+  }
+  input[type=number]:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  .unit{color:var(--muted); font-size:14px; font-weight:600;}
+
+  .match-count{
+    margin-top:20px; padding-top:16px; border-top:1px dashed var(--border);
+    font-size:13px; color:var(--muted); display:flex; justify-content:space-between; align-items:center;
+  }
+  .match-count b{color:var(--text);}
+  .match-count .warn{color:var(--accent);}
+
+  .nav{display:flex; justify-content:space-between; margin-top:22px;}
+  button{
+    font-family:inherit; font-size:14.5px; font-weight:650; padding:11px 20px; border-radius:9px;
+    border:1px solid var(--border); background:var(--panel); color:var(--text); cursor:pointer;
+  }
+  button.primary{background:var(--accent); border-color:var(--accent); color:#fff;}
+  button.primary:hover{background:var(--accent-dark); border-color:var(--accent-dark);}
+  button:disabled{opacity:.4; cursor:not-allowed;}
+  button.ghost{border-color:transparent; background:transparent; color:var(--muted);}
+  button.ghost:hover{color:var(--text);}
+
+  .results h2{font-size:20px; margin:0 0 4px;}
+  .results .sub{margin-bottom:20px;}
+  .card{
+    background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:20px 22px;
+    margin-bottom:14px; box-shadow:var(--shadow); position:relative;
+  }
+  .card.best{border-color:var(--ok);}
+  .best-tag{
+    position:absolute; top:-11px; left:20px; background:var(--ok); color:#04241a; font-size:11px;
+    font-weight:800; letter-spacing:.05em; text-transform:uppercase; padding:3px 10px; border-radius:20px;
+  }
+  .card-head{display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:14px; flex-wrap:wrap;}
+  .card-head .code{font-size:19px; font-weight:750; font-family: "SF Mono", Consolas, monospace;}
+  .card-head .series{color:var(--muted); font-size:13px;}
+  .spec-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:12px 18px;}
+  .spec{}
+  .spec .k{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px;}
+  .spec .v{font-size:14.5px; font-weight:600;}
+  .note-box{
+    margin-top:20px; padding:14px 16px; border-radius:10px; background:var(--accent-soft);
+    border:1px solid var(--border); font-size:13.5px; color:var(--text);
+  }
+  .empty{
+    text-align:center; padding:40px 20px; color:var(--muted);
+  }
+  footer{margin-top:32px; text-align:center; color:var(--muted); font-size:12px;}
+  .relaxed-tag{display:inline-block; font-size:11px; font-weight:700; background:var(--track); color:var(--muted); padding:2px 8px; border-radius:20px; margin-left:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Railway HSCB Selector</div>
+    <h1>Find the right high-speed circuit breaker</h1>
+    <p class="sub">Answer a few questions about your application and we'll narrow down the IR3000 / IR4000 series breaker that fits — no catalogue reading required.</p>
+  </header>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="panel" id="wizard"></div>
+
+  <div class="results" id="results" style="display:none"></div>
+
+  <footer>Specifications compiled from manufacturer datasheets (IR3000 series VV, IR4000 series VH, VH DVM, VV). Final selection should be confirmed against the full datasheet and application duty cycle before ordering.</footer>
+</div>
+
+<script>
+const MODELS = [
+  {code:"IR3015 VV 09L", series:"IR3000 VV", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:1500, scc:{900:30}, sccPeak:{900:42}, weight:44, tempMin:-30, tempMax:70},
+  {code:"IR3030 VV 09L", series:"IR3000 VV", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:3000, scc:{900:30}, sccPeak:{900:42}, weight:54, tempMin:-30, tempMax:70},
+  {code:"IR3015 VV 09M", series:"IR3000 VV", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:1500, scc:{900:50}, sccPeak:{900:70}, weight:44, tempMin:-30, tempMax:70},
+  {code:"IR3030 VV 09M", series:"IR3000 VV", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:3000, scc:{900:50}, sccPeak:{900:70}, weight:54, tempMin:-30, tempMax:70},
+  {code:"IR3015 VV 18M", series:"IR3000 VV", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:2300, thermal:1500, scc:{1800:30}, sccPeak:{1800:42}, weight:44, tempMin:-30, tempMax:70},
+  {code:"IR3030 VV 18M", series:"IR3000 VV", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:2300, thermal:3000, scc:{1800:30}, sccPeak:{1800:42}, weight:54, tempMin:-30, tempMax:70},
+
+  {code:"IR4030 VH 18M", series:"IR4000 VH", mount:"Horizontal", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:3000, scc:{1800:100}, sccPeak:{1800:140}, weight:190, tempMin:-40, tempMax:70},
+  {code:"IR4045 VH 18M", series:"IR4000 VH", mount:"Horizontal", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:4500, scc:{1800:100}, sccPeak:{1800:140}, weight:215, tempMin:-40, tempMax:70},
+  {code:"IR4030 VH 36M", series:"IR4000 VH", mount:"Horizontal", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:3000, scc:{3600:55}, sccPeak:{3600:77}, weight:190, tempMin:-40, tempMax:70},
+  {code:"IR4045 VH 36M", series:"IR4000 VH", mount:"Horizontal", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:4500, scc:{3600:55}, sccPeak:{3600:77}, weight:215, tempMin:-40, tempMax:70},
+
+  {code:"IR4030 VH DVM", series:"IR4000 VH DVM", mount:"Horizontal", voltages:[1800,3600], maxVoltage:4000, insulation:3700, thermal:3000, scc:{1800:100,3600:55}, sccPeak:{1800:140,3600:77}, weight:190, tempMin:-40, tempMax:70, dual:true},
+  {code:"IR4045 VH DVM", series:"IR4000 VH DVM", mount:"Horizontal", voltages:[1800,3600], maxVoltage:4000, insulation:3700, thermal:4500, scc:{1800:100,3600:55}, sccPeak:{1800:140,3600:77}, weight:215, tempMin:-40, tempMax:70, dual:true},
+
+  {code:"IR4030 VV 18M", series:"IR4000 VV", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:3000, scc:{1800:100}, sccPeak:{1800:140}, weight:165, tempMin:-30, tempMax:70},
+  {code:"IR4045 VV 18M", series:"IR4000 VV", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:4500, scc:{1800:100}, sccPeak:{1800:140}, weight:185, tempMin:-30, tempMax:70},
+  {code:"IR4030 VV 36M", series:"IR4000 VV", mount:"Vertical", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:3000, scc:{3600:55}, sccPeak:{3600:77}, weight:165, tempMin:-30, tempMax:70},
+  {code:"IR4045 VV 36M", series:"IR4000 VV", mount:"Vertical", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:4500, scc:{3600:55}, sccPeak:{3600:77}, weight:185, tempMin:-30, tempMax:70},
+];
+
+const CONTROL_VOLTAGES = [24,36,48,72,110];
+
+const STEPS = [
+  {
+    key:"voltage", type:"choice",
+    title:"What is the rated DC operating voltage of the line?",
+    hint:"This is the nominal supply voltage the breaker will be installed on. If your application involves two line voltages (e.g. 1800 and 3600 Vdc), pick either one here — the next question covers that.",
+    options:[
+      {value:900, name:"900 Vdc", desc:"Low-voltage traction / auxiliary circuits"},
+      {value:1800, name:"1800 Vdc", desc:"Standard high-speed DC line"},
+      {value:3600, name:"3600 Vdc", desc:"High-voltage DC line"},
+    ]
+  },
+  {
+    key:"dualVoltage", type:"choice",
+    showIf:(a)=> a.voltage === 1800 || a.voltage === 3600,
+    title:"Does this breaker need to operate at both 1800 Vdc and 3600 Vdc?",
+    hint:"Dual-voltage (DVM) breakers can hold at either line voltage and are meant for multi-voltage-system rolling stock. If your line only ever runs at one fixed voltage, a single-voltage breaker is simpler and more cost-effective — we won't recommend a dual-voltage unit unless you need it.",
+    options:[
+      {value:true, name:"Yes — needs dual 1800 / 3600 Vdc capability", desc:"Multi-voltage-system application"},
+      {value:false, name:"No — single fixed voltage only", desc:"Most standard installations"},
+    ]
+  },
+  {
+    key:"thermal", type:"choice",
+    title:"What continuous (thermal) current will the breaker carry?",
+    hint:"Choose the closest band to your circuit's continuous rated current — we'll pick a breaker rated at or above it.",
+    options:[
+      {value:1500, name:"Up to 1500 A", desc:""},
+      {value:3000, name:"1500 – 3000 A", desc:""},
+      {value:4500, name:"3000 – 4500 A", desc:""},
+    ]
+  },
+  {
+    key:"mount", type:"choice",
+    title:"How does the breaker need to be mounted?",
+    hint:"Driven by the available panel/cubicle space on the vehicle.",
+    options:[
+      {value:"Vertical", name:"Vertical", desc:"Vertical panel mounting"},
+      {value:"Horizontal", name:"Horizontal", desc:"Horizontal panel mounting"},
+      {value:"any", name:"No preference", desc:"Show both orientations"},
+    ]
+  },
+  {
+    key:"scc", type:"number",
+    title:"What short-circuit breaking capacity do you need?",
+    hint:"The minimum rated short-circuit making/breaking capacity (τ₁, kA) required for protection coordination. Leave blank if unknown.",
+    unit:"kA", placeholder:"e.g. 40"
+  },
+  {
+    key:"tempMin", type:"choice",
+    title:"What's the minimum ambient operating temperature?",
+    hint:"Some variants are rated down to -40°C, others to -30°C.",
+    options:[
+      {value:-30, name:"-30°C or higher", desc:"Standard range"},
+      {value:-40, name:"As low as -40°C", desc:"Extended cold-climate range"},
+    ]
+  },
+];
+
+function activeSteps(){
+  return STEPS.filter(s => !s.showIf || s.showIf(answers));
+}
+
+let current = 0;
+let answers = {};
+
+function renderProgress(){
+  const el = document.getElementById('progress');
+  el.innerHTML = '';
+  const steps = activeSteps();
+  steps.forEach((s,i)=>{
+    const seg = document.createElement('div');
+    seg.className = 'seg' + (i < current ? ' done' : i === current ? ' active' : '');
+    el.appendChild(seg);
+  });
+}
+
+function renderStep(){
+  const steps = activeSteps();
+  if(current >= steps.length){ renderResults(); return; }
+  document.getElementById('results').style.display = 'none';
+  const wizard = document.getElementById('wizard');
+  wizard.style.display = 'block';
+  const step = steps[current];
+  renderProgress();
+
+  let html = `<div class="q-label">Step ${current+1} of ${steps.length}</div>
+    <div class="q-title">${step.title}</div>
+    <div class="q-hint">${step.hint}</div>`;
+
+  if(step.type === 'choice'){
+    html += '<div class="options">';
+    step.options.forEach((opt,i)=>{
+      const sel = answers[step.key] === opt.value;
+      html += `<button type="button" class="opt${sel?' selected':''}" data-index="${i}">
+        <span class="radio"></span>
+        <span class="otext"><span class="oname">${opt.name}</span>${opt.desc?`<span class="odesc">${opt.desc}</span>`:''}</span>
+      </button>`;
+    });
+    html += '</div>';
+  } else if(step.type === 'number'){
+    const val = answers[step.key] !== undefined ? answers[step.key] : '';
+    html += `<div class="num-row">
+      <input type="number" id="numInput" min="0" step="1" placeholder="${step.placeholder}" value="${val}">
+      <span class="unit">${step.unit}</span>
+    </div>`;
+  }
+
+  const liveCount = countMatches(getAnswersUpTo(steps, current+1)).length;
+  html += `<div class="match-count"><span>Matching models so far</span> <b class="${liveCount===0?'warn':''}">${liveCount} of ${MODELS.length}</b></div>`;
+
+  html += `<div class="nav">
+    <button type="button" class="ghost" id="backBtn" ${current===0?'disabled':''}>← Back</button>
+    <button type="button" class="primary" id="nextBtn">${current === steps.length-1 ? 'See results' : 'Next →'}</button>
+  </div>`;
+
+  wizard.innerHTML = html;
+
+  if(step.type === 'choice'){
+    wizard.querySelectorAll('.opt').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const opt = step.options[Number(btn.dataset.index)];
+        answers[step.key] = opt.value;
+        renderStep();
+      });
+    });
+  } else if(step.type === 'number'){
+    const input = document.getElementById('numInput');
+    input.addEventListener('input', ()=>{
+      answers[step.key] = input.value === '' ? undefined : Number(input.value);
+      updateLiveCount();
+    });
+    input.focus();
+  }
+
+  document.getElementById('backBtn').addEventListener('click', ()=>{ current--; renderStep(); });
+  document.getElementById('nextBtn').addEventListener('click', ()=>{ current++; renderStep(); });
+}
+
+function updateLiveCount(){
+  const el = document.querySelector('.match-count b');
+  if(!el) return;
+  const steps = activeSteps();
+  const n = countMatches(getAnswersUpTo(steps, current+1)).length;
+  el.textContent = `${n} of ${MODELS.length}`;
+  el.className = n===0 ? 'warn' : '';
+}
+
+function getAnswersUpTo(steps, stepIndex){
+  const a = {};
+  steps.slice(0, stepIndex).forEach(s=>{ if(answers[s.key] !== undefined) a[s.key] = answers[s.key]; });
+  return a;
+}
+
+function countMatches(a){
+  return MODELS.filter(m => modelMatches(m, a));
+}
+
+function modelMatches(m, a, opts={}){
+  const relax = opts.relax || {};
+  if(a.voltage !== undefined && !relax.voltage){
+    if(!m.voltages.includes(a.voltage)) return false;
+  }
+  if(a.dualVoltage !== undefined && !relax.dualVoltage){
+    if(a.dualVoltage === true && !m.dual) return false;
+    if(a.dualVoltage === false && m.dual) return false;
+  }
+  if(a.thermal !== undefined && !relax.thermal){
+    if(m.thermal < a.thermal) return false;
+  }
+  if(a.mount !== undefined && a.mount !== 'any' && !relax.mount){
+    if(m.mount !== a.mount) return false;
+  }
+  if(a.scc !== undefined && a.scc !== '' && !relax.scc){
+    const voltageForScc = a.voltage !== undefined && m.scc[a.voltage] !== undefined ? a.voltage : Object.keys(m.scc)[0];
+    const sccVal = m.scc[voltageForScc];
+    if(sccVal === undefined || sccVal < a.scc) return false;
+  }
+  if(a.tempMin !== undefined && !relax.tempMin){
+    if(m.tempMin > a.tempMin) return false;
+  }
+  return true;
+}
+
+function renderResults(){
+  document.getElementById('wizard').style.display = 'none';
+  renderProgress();
+  const el = document.getElementById('results');
+  el.style.display = 'block';
+
+  let matches = countMatches(answers);
+  let relaxedNote = null;
+
+  if(matches.length === 0){
+    // progressively relax least-critical constraints: tempMin, then (if the customer said "no dual-voltage
+    // needed") allow DVM as a safe superset, then scc, then mount
+    const relaxOrder = [{tempMin:true}];
+    if(answers.dualVoltage === false) relaxOrder.push({dualVoltage:true});
+    relaxOrder.push({scc:true}, {mount:true});
+    let relax = {};
+    for(const step of relaxOrder){
+      relax = {...relax, ...step};
+      const m = MODELS.filter(mo => modelMatches(mo, answers, {relax}));
+      if(m.length > 0){
+        matches = m;
+        relaxedNote = Object.keys(relax);
+        break;
+      }
+    }
+  }
+
+  matches.sort((x,y)=>{
+    if(x.thermal !== y.thermal) return x.thermal - y.thermal;
+    return x.weight - y.weight;
+  });
+
+  let html = `<h2>Recommended breaker${matches.length!==1?'s':''}</h2>
+    <p class="sub">${summarizeAnswers()}</p>`;
+
+  if(relaxedNote){
+    html += `<div class="note-box">No exact match was found for all criteria, so we relaxed: <b>${relaxedNote.map(prettyRelax).join(', ')}</b>. Review the closest options below with an engineer before finalizing.</div>`;
+  }
+
+  if(matches.length === 0){
+    html += `<div class="empty">No breaker in this catalogue set meets these requirements. Consider adjusting the voltage or current inputs, or contact engineering for a custom configuration.</div>`;
+  } else {
+    matches.forEach((m,i)=>{
+      const sccVoltage = answers.voltage !== undefined && m.scc[answers.voltage] !== undefined ? answers.voltage : m.voltages[0];
+      html += `<div class="card ${i===0?'best':''}">
+        ${i===0 && matches.length>1 ? '<span class="best-tag">Best fit</span>' : ''}
+        <div class="card-head">
+          <div><div class="code">${m.code}</div><div class="series">${m.series}</div></div>
+        </div>
+        <div class="spec-grid">
+          <div class="spec"><div class="k">Mounting</div><div class="v">${m.mount}</div></div>
+          <div class="spec"><div class="k">Rated voltage</div><div class="v">${m.voltages.join(' / ')} Vdc${m.dual?' (dual)':''}</div></div>
+          <div class="spec"><div class="k">Voltage capability</div><div class="v">${m.dual ? 'Dual (1800 & 3600 Vdc)' : 'Single fixed voltage'}</div></div>
+          <div class="spec"><div class="k">Max operational voltage</div><div class="v">${m.maxVoltage} Vdc</div></div>
+          <div class="spec"><div class="k">Thermal current</div><div class="v">${m.thermal} A</div></div>
+          <div class="spec"><div class="k">Short-circuit capacity</div><div class="v">${m.scc[sccVoltage]} kA (${m.sccPeak[sccVoltage]} kA peak)</div></div>
+          <div class="spec"><div class="k">Insulation voltage</div><div class="v">${m.insulation} Vdc</div></div>
+          <div class="spec"><div class="k">Ambient range</div><div class="v">${m.tempMin}°C to +${m.tempMax}°C</div></div>
+          <div class="spec"><div class="k">Weight</div><div class="v">${m.weight} kg</div></div>
+          <div class="spec"><div class="k">Control voltage Uc</div><div class="v">${CONTROL_VOLTAGES.join('/')} Vdc</div></div>
+        </div>
+      </div>`;
+    });
+  }
+
+  html += `<div class="nav" style="margin-top:8px;">
+    <button type="button" class="ghost" id="backBtn2">← Adjust answers</button>
+    <button type="button" class="primary" id="restartBtn">Start over</button>
+  </div>`;
+
+  el.innerHTML = html;
+  document.getElementById('restartBtn').addEventListener('click', ()=>{ answers = {}; current = 0; renderStep(); });
+  document.getElementById('backBtn2').addEventListener('click', ()=>{ current = STEPS.length-1; renderStep(); });
+}
+
+function prettyRelax(key){
+  return {tempMin:"minimum temperature", scc:"short-circuit capacity", mount:"mounting orientation", dualVoltage:"the single-voltage-only preference (a dual-voltage unit was allowed as a fallback)"}[key] || key;
+}
+
+function summarizeAnswers(){
+  const parts = [];
+  if(answers.voltage !== undefined) parts.push(`${answers.voltage} Vdc`);
+  if(answers.dualVoltage === true) parts.push('dual-voltage capability required');
+  if(answers.dualVoltage === false) parts.push('single fixed voltage');
+  if(answers.thermal !== undefined) parts.push(`≥${answers.thermal} A thermal`);
+  if(answers.mount !== undefined && answers.mount !== 'any') parts.push(`${answers.mount.toLowerCase()} mounting`);
+  if(answers.scc) parts.push(`≥${answers.scc} kA SCC`);
+  if(answers.tempMin !== undefined) parts.push(`down to ${answers.tempMin}°C`);
+  return "Based on: " + (parts.length ? parts.join(' · ') : 'your requirements');
+}
+
+renderStep();
+</script>
+</body>
+</html>
