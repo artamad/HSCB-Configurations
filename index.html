@@ -81,13 +81,6 @@
   input[type=number]:focus{outline:2px solid var(--accent); outline-offset:1px;}
   .unit{color:var(--muted); font-size:14px; font-weight:600;}
 
-  .match-count{
-    margin-top:20px; padding-top:16px; border-top:1px dashed var(--border);
-    font-size:13px; color:var(--muted); display:flex; justify-content:space-between; align-items:center;
-  }
-  .match-count b{color:var(--text);}
-  .match-count .warn{color:var(--accent);}
-
   .nav{display:flex; justify-content:space-between; margin-top:22px;}
   button{
     font-family:inherit; font-size:14.5px; font-weight:650; padding:11px 20px; border-radius:9px;
@@ -258,9 +251,6 @@ function renderStep(){
     </div>`;
   }
 
-  const liveCount = countMatches(getAnswersUpTo(steps, current+1)).length;
-  html += `<div class="match-count"><span>Matching models so far</span> <b class="${liveCount===0?'warn':''}">${liveCount} of ${MODELS.length}</b></div>`;
-
   html += `<div class="nav">
     <button type="button" class="ghost" id="backBtn" ${current===0?'disabled':''}>← Back</button>
     <button type="button" class="primary" id="nextBtn">${current === steps.length-1 ? 'See results' : 'Next →'}</button>
@@ -280,28 +270,12 @@ function renderStep(){
     const input = document.getElementById('numInput');
     input.addEventListener('input', ()=>{
       answers[step.key] = input.value === '' ? undefined : Number(input.value);
-      updateLiveCount();
     });
     input.focus();
   }
 
   document.getElementById('backBtn').addEventListener('click', ()=>{ current--; renderStep(); });
   document.getElementById('nextBtn').addEventListener('click', ()=>{ current++; renderStep(); });
-}
-
-function updateLiveCount(){
-  const el = document.querySelector('.match-count b');
-  if(!el) return;
-  const steps = activeSteps();
-  const n = countMatches(getAnswersUpTo(steps, current+1)).length;
-  el.textContent = `${n} of ${MODELS.length}`;
-  el.className = n===0 ? 'warn' : '';
-}
-
-function getAnswersUpTo(steps, stepIndex){
-  const a = {};
-  steps.slice(0, stepIndex).forEach(s=>{ if(answers[s.key] !== undefined) a[s.key] = answers[s.key]; });
-  return a;
 }
 
 function countMatches(a){
