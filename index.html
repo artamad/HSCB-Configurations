@@ -166,6 +166,9 @@
     font-size:10px; font-weight:700; background:var(--track); color:var(--muted);
     padding:2px 8px; border-radius:20px; text-transform:none; letter-spacing:0;
   }
+
+  .compare-cols{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px;}
+  @media (max-width:640px){.compare-cols{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -356,6 +359,7 @@ let relaxedNote = null;
 let auxVoltage = null;
 let breakingCapacity = null;
 let trippingPoint = null;
+let configA = null; // snapshot of the first configuration once "Compare another configuration" is used
 
 // Resolves a model's trip/break range for the voltage actually in play (handles the DVM
 // per-voltage {1800:[...], 3600:[...]} shape as well as the plain [min,max] shape).
@@ -369,6 +373,10 @@ function getRange(m, field){
 
 // Samples 5 evenly-spaced values across [min,max]. If the datasheet range is a single fixed
 // value (min===max), synthesizes a small spread so the picker still offers 5 distinct options.
+function flowLabel(){
+  return configA ? 'Configuration B' : 'Unique code';
+}
+
 function rangeLabel(range){
   return range[0] === range[1] ? `around ${range[0]}` : `${range[0]}–${range[1]}`;
 }
@@ -420,6 +428,7 @@ function computeBestFit(){
   trippingPoint = null;
   priceRevealed = false;
   statusRevealed = false;
+  configA = null;
 }
 
 function prettyRelax(key){
@@ -499,9 +508,9 @@ function renderBestFit(){
 
 function renderAuxStep(){
   let html = `<div class="reveal-stagger">`;
-  html += `<div class="q-label">Unique code · Step 1 of 3</div>
+  html += `<div class="q-label">${flowLabel()} · Step 1 of 3</div>
     <div class="q-title">What auxiliary/control circuit voltage (Uc) does your application use?</div>
-    <div class="q-hint">The first of three configuration details needed to determine the exact orderable unique code for the ${bestFit.code} (${bestFit.family}).</div>`;
+    <div class="q-hint">${configA ? `Now configuring a second variant of the ${bestFit.code} to compare against Configuration A.` : `The first of three configuration details needed to determine the exact orderable unique code for the ${bestFit.code} (${bestFit.family}).`}</div>`;
 
   html += '<div class="options">';
   CONTROL_VOLTAGES.forEach((v,i)=>{
@@ -536,7 +545,7 @@ function renderBreakingStep(){
   const options = sampleRange(range, 1);
 
   let html = `<div class="reveal-stagger">`;
-  html += `<div class="q-label">Unique code · Step 2 of 3</div>
+  html += `<div class="q-label">${flowLabel()} · Step 2 of 3</div>
     <div class="q-title">What short-circuit breaking capacity does this configuration need?</div>
     <div class="q-hint">Sampled from the ${bestFit.code}'s rated breaking capacity (${rangeLabel(range)} kA across its τ1–τ4 duty points).</div>`;
 
@@ -573,7 +582,7 @@ function renderTrippingStep(){
   const options = sampleRange(range, 2);
 
   let html = `<div class="reveal-stagger">`;
-  html += `<div class="q-label">Unique code · Step 3 of 3</div>
+  html += `<div class="q-label">${flowLabel()} · Step 3 of 3</div>
     <div class="q-title">What tripping point does this configuration need?</div>
     <div class="q-hint">Sampled from the ${bestFit.code}'s direct acting trip device setting (${rangeLabel(range)} kA).</div>`;
 
@@ -589,7 +598,7 @@ function renderTrippingStep(){
 
   html += `<div class="nav">
       <button type="button" class="ghost" id="backBtn6">← Back</button>
-      <button type="button" class="primary" id="revealBtn" ${trippingPoint===null?'disabled':''}>Reveal unique code →</button>
+      <button type="button" class="primary" id="revealBtn" ${trippingPoint===null?'disabled':''}>${configA ? 'Compare configurations →' : 'Reveal unique code →'}</button>
     </div>`;
   html += `</div>`;
 
@@ -602,7 +611,10 @@ function renderTrippingStep(){
     });
   });
   document.getElementById('backBtn6').addEventListener('click', renderBreakingStep);
-  document.getElementById('revealBtn').addEventListener('click', ()=>{ if(trippingPoint!==null) renderFinalCode(); });
+  document.getElementById('revealBtn').addEventListener('click', ()=>{
+    if(trippingPoint===null) return;
+    if(configA) renderComparison(); else renderFinalCode();
+  });
 }
 
 function generateUniqueCode(code, uc, bc, tp){
@@ -668,16 +680,88 @@ function renderFinalCode(){
   }
 
   html += `<div class="nav" style="margin-top:8px;">
-      <button type="button" class="ghost" id="backBtn4">← Back</button>
-      <button type="button" class="primary" id="restartBtn2">Start over</button>
+      <div class="nav-group">
+        <button type="button" class="ghost" id="backBtn4">← Back</button>
+        <button type="button" class="ghost" id="restartBtn2">Start over</button>
+      </div>
+      <button type="button" class="primary" id="compareBtn">Compare another configuration →</button>
     </div>`;
   html += `</div>`;
 
   showPhase(html);
   document.getElementById('backBtn4').addEventListener('click', renderTrippingStep);
-  document.getElementById('restartBtn2').addEventListener('click', ()=>{ answers = {}; current = 0; priceRevealed = false; statusRevealed = false; renderStep(); });
+  document.getElementById('restartBtn2').addEventListener('click', ()=>{ answers = {}; current = 0; priceRevealed = false; statusRevealed = false; configA = null; renderStep(); });
   document.getElementById('checkPriceBtn').addEventListener('click', ()=>{ priceRevealed = true; renderFinalCode(); });
   document.getElementById('checkStatusBtn').addEventListener('click', ()=>{ statusRevealed = true; renderFinalCode(); });
+  document.getElementById('compareBtn').addEventListener('click', ()=>{
+    configA = { auxVoltage, breakingCapacity, trippingPoint, code, price: fakePrice(code), status: fakeStatus(code) };
+    auxVoltage = null; breakingCapacity = null; trippingPoint = null;
+    priceRevealed = false; statusRevealed = false;
+    renderAuxStep();
+  });
+}
+
+function configCard(label, cfg){
+  return `<div class="card">
+      <div class="card-head"><div class="code">${label}</div></div>
+      <div class="commercial-code" style="word-break:break-all;">${cfg.code}</div>
+      <div class="spec-grid">
+        <div class="spec"><div class="k">Aux voltage</div><div class="v">${cfg.auxVoltage} Vdc</div></div>
+        <div class="spec"><div class="k">Breaking capacity</div><div class="v">${cfg.breakingCapacity} kA</div></div>
+        <div class="spec"><div class="k">Tripping point</div><div class="v">${cfg.trippingPoint} kA</div></div>
+      </div>
+      <div class="fake-result" style="margin-top:14px;">
+        <div class="label">SAP price <span class="sim-tag">Simulated</span></div>
+        <div class="value">€${cfg.price.toLocaleString('en-US')}</div>
+      </div>
+      <div class="fake-result ${cfg.status.tone==='warn'?'warn':''}">
+        <div class="label">Production status <span class="sim-tag">Simulated</span></div>
+        <div class="value">${cfg.status.label}</div>
+      </div>
+    </div>`;
+}
+
+function renderComparison(){
+  const m = bestFit;
+  const codeB = generateUniqueCode(m.code, auxVoltage, breakingCapacity, trippingPoint);
+  const configB = { auxVoltage, breakingCapacity, trippingPoint, code: codeB, price: fakePrice(codeB), status: fakeStatus(codeB) };
+
+  let html = `<div class="reveal-stagger">`;
+  html += `<div><span class="badge-tag">Comparing two configurations</span></div>`;
+  html += `<div class="aux-summary">${m.family} · ${m.code}</div>`;
+
+  html += `<div class="compare-cols">`;
+  html += configCard('Configuration A', configA);
+  html += configCard('Configuration B', configB);
+  html += `</div>`;
+
+  if(configA.code === codeB){
+    html += `<div class="note-box">Both configurations landed on the same unique code — try different answers for Configuration B to see a real comparison.</div>`;
+  } else if(configA.price !== configB.price){
+    const cheaperLabel = configA.price < configB.price ? 'A' : 'B';
+    const lo = Math.min(configA.price, configB.price).toLocaleString('en-US');
+    const hi = Math.max(configA.price, configB.price).toLocaleString('en-US');
+    html += `<div class="note-box">Configuration ${cheaperLabel} has the lower simulated price (€${lo} vs €${hi}).</div>`;
+  }
+
+  html += `<div class="nav" style="margin-top:8px;">
+      <div class="nav-group">
+        <button type="button" class="ghost" id="compareAgainBtn">Try a different Configuration B</button>
+        <button type="button" class="ghost" id="restartBtn3">Start over</button>
+      </div>
+    </div>`;
+  html += `</div>`;
+
+  showPhase(html);
+  document.getElementById('compareAgainBtn').addEventListener('click', ()=>{
+    auxVoltage = null; breakingCapacity = null; trippingPoint = null;
+    priceRevealed = false; statusRevealed = false;
+    renderAuxStep();
+  });
+  document.getElementById('restartBtn3').addEventListener('click', ()=>{
+    answers = {}; current = 0; configA = null; priceRevealed = false; statusRevealed = false;
+    renderStep();
+  });
 }
 
 function wireResultNav(){
