@@ -207,12 +207,6 @@ const STEPS = [
       {value:"any", name:"No preference", desc:"Show both orientations"},
     ]
   },
-  {
-    key:"scc", type:"number",
-    title:"What short-circuit breaking capacity do you need?",
-    hint:"The minimum rated short-circuit making/breaking capacity (τ₁, kA) required for protection coordination. Leave blank if unknown.",
-    unit:"kA", placeholder:"e.g. 40"
-  },
 ];
 
 function activeSteps(){
@@ -329,11 +323,6 @@ function modelMatches(m, a, opts={}){
   if(a.mount !== undefined && a.mount !== 'any' && !relax.mount){
     if(m.mount !== a.mount) return false;
   }
-  if(a.scc !== undefined && a.scc !== '' && !relax.scc){
-    const voltageForScc = a.voltage !== undefined && m.scc[a.voltage] !== undefined ? a.voltage : Object.keys(m.scc)[0];
-    const sccVal = m.scc[voltageForScc];
-    if(sccVal === undefined || sccVal < a.scc) return false;
-  }
   return true;
 }
 
@@ -348,10 +337,10 @@ function renderResults(){
 
   if(matches.length === 0){
     // progressively relax least-critical constraints: (if the customer said "no dual-voltage needed")
-    // allow DVM as a safe superset first, then scc, then mount
+    // allow DVM as a safe superset first, then mount
     const relaxOrder = [];
     if(answers.dualVoltage === false) relaxOrder.push({dualVoltage:true});
-    relaxOrder.push({scc:true}, {mount:true});
+    relaxOrder.push({mount:true});
     let relax = {};
     for(const step of relaxOrder){
       relax = {...relax, ...step};
@@ -413,7 +402,7 @@ function renderResults(){
 }
 
 function prettyRelax(key){
-  return {scc:"short-circuit capacity", mount:"mounting orientation", dualVoltage:"the single-voltage-only preference (a dual-voltage unit was allowed as a fallback)"}[key] || key;
+  return {mount:"mounting orientation", dualVoltage:"the single-voltage-only preference (a dual-voltage unit was allowed as a fallback)"}[key] || key;
 }
 
 function summarizeAnswers(){
@@ -423,7 +412,6 @@ function summarizeAnswers(){
   if(answers.dualVoltage === false) parts.push('single fixed voltage');
   if(answers.thermal !== undefined) parts.push(`≥${answers.thermal} A thermal`);
   if(answers.mount !== undefined && answers.mount !== 'any') parts.push(`${answers.mount.toLowerCase()} mounting`);
-  if(answers.scc) parts.push(`≥${answers.scc} kA SCC`);
   return "Based on: " + (parts.length ? parts.join(' · ') : 'your requirements');
 }
 
