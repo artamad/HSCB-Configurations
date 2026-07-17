@@ -7,28 +7,32 @@
 <style>
   :root{
     --bg:#f4f6f8; --panel:#ffffff; --text:#1a2430; --muted:#5b6b7a;
-    --border:#dde3e8; --accent:#c8102e; --accent-dark:#9c0c22;
-    --accent-soft:#fdecef; --ok:#1e8e5a; --ok-soft:#e8f6ef;
+    --border:#dde3e8; --accent:#004280; --accent-dark:#002f5c;
+    --accent-soft:#e5edf5; --ok:#1e8e5a; --ok-soft:#e8f6ef;
+    --danger:#c8102e; --danger-soft:#fdecef; --warn2:#a3690a; --warn2-soft:#fdf1d9;
     --track:#e3e8ec; --shadow: 0 2px 10px rgba(20,30,40,0.06);
   }
   @media (prefers-color-scheme: dark){
     :root{
       --bg:#12161a; --panel:#1b2126; --text:#e8edf1; --muted:#95a3ae;
-      --border:#2c353c; --accent:#ff4d5e; --accent-dark:#ff6b79;
-      --accent-soft:#2a171b; --ok:#3ddc8b; --ok-soft:#123024;
+      --border:#2c353c; --accent:#4d9fff; --accent-dark:#7ab8ff;
+      --accent-soft:#16283b; --ok:#3ddc8b; --ok-soft:#123024;
+      --danger:#ff4d5e; --danger-soft:#2a171b; --warn2:#e0b23d; --warn2-soft:#2e2712;
       --track:#2a3339; --shadow: 0 2px 14px rgba(0,0,0,0.4);
     }
   }
   :root[data-theme="dark"]{
     --bg:#12161a; --panel:#1b2126; --text:#e8edf1; --muted:#95a3ae;
-    --border:#2c353c; --accent:#ff4d5e; --accent-dark:#ff6b79;
-    --accent-soft:#2a171b; --ok:#3ddc8b; --ok-soft:#123024;
+    --border:#2c353c; --accent:#4d9fff; --accent-dark:#7ab8ff;
+    --accent-soft:#16283b; --ok:#3ddc8b; --ok-soft:#123024;
+    --danger:#ff4d5e; --danger-soft:#2a171b; --warn2:#e0b23d; --warn2-soft:#2e2712;
     --track:#2a3339; --shadow: 0 2px 14px rgba(0,0,0,0.4);
   }
   :root[data-theme="light"]{
     --bg:#f4f6f8; --panel:#ffffff; --text:#1a2430; --muted:#5b6b7a;
-    --border:#dde3e8; --accent:#c8102e; --accent-dark:#9c0c22;
-    --accent-soft:#fdecef; --ok:#1e8e5a; --ok-soft:#e8f6ef;
+    --border:#dde3e8; --accent:#004280; --accent-dark:#002f5c;
+    --accent-soft:#e5edf5; --ok:#1e8e5a; --ok-soft:#e8f6ef;
+    --danger:#c8102e; --danger-soft:#fdecef; --warn2:#a3690a; --warn2-soft:#fdf1d9;
     --track:#e3e8ec; --shadow: 0 2px 10px rgba(20,30,40,0.06);
   }
   *{box-sizing:border-box;}
@@ -39,6 +43,12 @@
   }
   .wrap{max-width:840px; margin:0 auto; padding:32px 20px 80px;}
   header.top{margin-bottom:28px;}
+  .brand-logo{height:34px; width:auto; display:block; margin-bottom:18px;}
+  @media (prefers-color-scheme: dark){
+    .brand-logo{background:#fff; padding:8px 14px; border-radius:8px;}
+  }
+  :root[data-theme="dark"] .brand-logo{background:#fff; padding:8px 14px; border-radius:8px;}
+  :root[data-theme="light"] .brand-logo{background:none; padding:0; border-radius:0;}
   .eyebrow{color:var(--accent); font-weight:700; font-size:12.5px; letter-spacing:.08em; text-transform:uppercase;}
   h1{font-size:26px; margin:6px 0 6px; line-height:1.25;}
   .sub{color:var(--muted); font-size:14.5px; max-width:56ch;}
@@ -156,7 +166,12 @@
     margin-top:14px; padding:16px 18px; border-radius:10px; border:1px solid var(--border);
     background:var(--panel); animation:revealUp .4s ease both;
   }
-  .fake-result.warn{border-color:var(--accent); background:var(--accent-soft);}
+  .fake-result.status-stopped{border-color:var(--danger); background:var(--danger-soft);}
+  .fake-result.status-stopped .value{color:var(--danger);}
+  .fake-result.status-available{border-color:var(--ok); background:var(--ok-soft);}
+  .fake-result.status-available .value{color:var(--ok);}
+  .fake-result.status-warehouse{border-color:var(--warn2); background:var(--warn2-soft);}
+  .fake-result.status-warehouse .value{color:var(--warn2);}
   .fake-result .label{
     font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;
     margin-bottom:6px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;
@@ -174,6 +189,7 @@
 <body>
 <div class="wrap">
   <header class="top">
+    <img class="brand-logo" src="images/microelettrica-logo.png" alt="Microelettrica">
     <div class="eyebrow">Railway HSCB Selector</div>
     <h1>Find the right high-speed circuit breaker</h1>
     <p class="sub">Answer a few questions about your application and we'll narrow down the IR3000 / IR4000 series breaker that fits — no catalogue reading required.</p>
@@ -634,12 +650,16 @@ function fakePrice(code){
 }
 
 const FAKE_STATUSES = [
-  {label:'50 units in warehouse', tone:'ok'},
-  {label:'60 units in warehouse', tone:'ok'},
-  {label:'40 units in warehouse', tone:'ok'},
-  {label:'Available to order', tone:'ok'},
-  {label:'Production stopped', tone:'warn'},
+  {label:'50 units in warehouse', tone:'warehouse'},
+  {label:'60 units in warehouse', tone:'warehouse'},
+  {label:'40 units in warehouse', tone:'warehouse'},
+  {label:'Available to order', tone:'available'},
+  {label:'Production stopped', tone:'stopped'},
 ];
+
+function statusClass(tone){
+  return {stopped:'status-stopped', available:'status-available', warehouse:'status-warehouse'}[tone] || '';
+}
 
 function fakeStatus(code){
   return FAKE_STATUSES[hashString(code + '-status') % FAKE_STATUSES.length];
@@ -673,7 +693,7 @@ function renderFinalCode(){
   }
   if(statusRevealed){
     const status = fakeStatus(code);
-    html += `<div class="fake-result ${status.tone==='warn'?'warn':''}">
+    html += `<div class="fake-result ${statusClass(status.tone)}">
         <div class="label">Production line status <span class="sim-tag">Simulated — not a live system</span></div>
         <div class="value">${status.label}</div>
       </div>`;
@@ -714,7 +734,7 @@ function configCard(label, cfg){
         <div class="label">SAP price <span class="sim-tag">Simulated</span></div>
         <div class="value">€${cfg.price.toLocaleString('en-US')}</div>
       </div>
-      <div class="fake-result ${cfg.status.tone==='warn'?'warn':''}">
+      <div class="fake-result ${statusClass(cfg.status.tone)}">
         <div class="label">Production status <span class="sim-tag">Simulated</span></div>
         <div class="value">${cfg.status.label}</div>
       </div>
