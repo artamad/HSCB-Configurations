@@ -150,6 +150,22 @@
     padding:24px; text-align:center; margin:6px 0 20px; word-break:break-all;
   }
   .aux-summary{color:var(--muted); font-size:13.5px; margin-bottom:4px;}
+
+  .fake-tools{display:flex; gap:10px; flex-wrap:wrap; margin-top:18px;}
+  .fake-result{
+    margin-top:14px; padding:16px 18px; border-radius:10px; border:1px solid var(--border);
+    background:var(--panel); animation:revealUp .4s ease both;
+  }
+  .fake-result.warn{border-color:var(--accent); background:var(--accent-soft);}
+  .fake-result .label{
+    font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em;
+    margin-bottom:6px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  }
+  .fake-result .value{font-size:22px; font-weight:750;}
+  .sim-tag{
+    font-size:10px; font-weight:700; background:var(--track); color:var(--muted);
+    padding:2px 8px; border-radius:20px; text-transform:none; letter-spacing:0;
+  }
 </style>
 </head>
 <body>
@@ -402,6 +418,8 @@ function computeBestFit(){
   auxVoltage = null;
   breakingCapacity = null;
   trippingPoint = null;
+  priceRevealed = false;
+  statusRevealed = false;
 }
 
 function prettyRelax(key){
@@ -591,6 +609,33 @@ function generateUniqueCode(code, uc, bc, tp){
   return code.replace(/ /g, '-') + '-UC' + uc + '-BC' + bc + '-TP' + tp;
 }
 
+// Simple deterministic string hash so a given unique code always yields the same demo
+// price/status (rather than a new random result on every click).
+function hashString(str){
+  let h = 0;
+  for(let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) >>> 0; }
+  return h;
+}
+
+function fakePrice(code){
+  return 4000 + (hashString(code + '-price') % 1001); // 4000-5000 EUR
+}
+
+const FAKE_STATUSES = [
+  {label:'50 units in warehouse', tone:'ok'},
+  {label:'60 units in warehouse', tone:'ok'},
+  {label:'40 units in warehouse', tone:'ok'},
+  {label:'Available to order', tone:'ok'},
+  {label:'Production stopped', tone:'warn'},
+];
+
+function fakeStatus(code){
+  return FAKE_STATUSES[hashString(code + '-status') % FAKE_STATUSES.length];
+}
+
+let priceRevealed = false;
+let statusRevealed = false;
+
 function renderFinalCode(){
   const m = bestFit;
   const code = generateUniqueCode(m.code, auxVoltage, breakingCapacity, trippingPoint);
@@ -601,6 +646,27 @@ function renderFinalCode(){
   html += `<div class="aux-summary">Auxiliary voltage ${auxVoltage} Vdc · Breaking capacity ${breakingCapacity} kA · Tripping point ${trippingPoint} kA</div>`;
   html += `<div class="code-display">${code}</div>`;
   html += `<div class="note-box">This unique code is a system-generated reference (not the manufacturer's official ordering code) built from the commercial code, auxiliary voltage, breaking capacity and tripping point. Confirm the exact part number with the manufacturer before ordering.</div>`;
+
+  html += `<div class="fake-tools">
+      <button type="button" class="ghost" id="checkPriceBtn">Check price (SAP)</button>
+      <button type="button" class="ghost" id="checkStatusBtn">Check production line status</button>
+    </div>`;
+
+  if(priceRevealed){
+    const price = fakePrice(code);
+    html += `<div class="fake-result">
+        <div class="label">SAP price lookup <span class="sim-tag">Simulated — not connected to SAP</span></div>
+        <div class="value">€${price.toLocaleString('en-US')}</div>
+      </div>`;
+  }
+  if(statusRevealed){
+    const status = fakeStatus(code);
+    html += `<div class="fake-result ${status.tone==='warn'?'warn':''}">
+        <div class="label">Production line status <span class="sim-tag">Simulated — not a live system</span></div>
+        <div class="value">${status.label}</div>
+      </div>`;
+  }
+
   html += `<div class="nav" style="margin-top:8px;">
       <button type="button" class="ghost" id="backBtn4">← Back</button>
       <button type="button" class="primary" id="restartBtn2">Start over</button>
@@ -609,7 +675,9 @@ function renderFinalCode(){
 
   showPhase(html);
   document.getElementById('backBtn4').addEventListener('click', renderTrippingStep);
-  document.getElementById('restartBtn2').addEventListener('click', ()=>{ answers = {}; current = 0; renderStep(); });
+  document.getElementById('restartBtn2').addEventListener('click', ()=>{ answers = {}; current = 0; priceRevealed = false; statusRevealed = false; renderStep(); });
+  document.getElementById('checkPriceBtn').addEventListener('click', ()=>{ priceRevealed = true; renderFinalCode(); });
+  document.getElementById('checkStatusBtn').addEventListener('click', ()=>{ statusRevealed = true; renderFinalCode(); });
 }
 
 function wireResultNav(){
