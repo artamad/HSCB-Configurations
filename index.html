@@ -82,6 +82,7 @@
   .unit{color:var(--muted); font-size:14px; font-weight:600;}
 
   .nav{display:flex; justify-content:space-between; margin-top:22px;}
+  .nav-group{display:flex; gap:6px;}
   button{
     font-family:inherit; font-size:14.5px; font-weight:650; padding:11px 20px; border-radius:9px;
     border:1px solid var(--border); background:var(--panel); color:var(--text); cursor:pointer;
@@ -119,6 +120,36 @@
   }
   footer{margin-top:32px; text-align:center; color:var(--muted); font-size:12px;}
   .relaxed-tag{display:inline-block; font-size:11px; font-weight:700; background:var(--track); color:var(--muted); padding:2px 8px; border-radius:20px; margin-left:8px;}
+
+  @keyframes revealUp{ from{opacity:0; transform:translateY(22px);} to{opacity:1; transform:none;} }
+  @keyframes photoReveal{ from{opacity:0; transform:scale(.94) translateY(14px);} to{opacity:1; transform:none;} }
+  .reveal-stagger > *{opacity:0; animation:revealUp .55s cubic-bezier(.16,1,.3,1) forwards;}
+  .reveal-stagger > *:nth-child(1){animation-delay:.05s}
+  .reveal-stagger > *:nth-child(2){animation-delay:.14s}
+  .reveal-stagger > *:nth-child(3){animation-delay:.23s}
+  .reveal-stagger > *:nth-child(4){animation-delay:.32s}
+  .reveal-stagger > *:nth-child(5){animation-delay:.41s}
+  .reveal-stagger > *:nth-child(6){animation-delay:.50s}
+  .reveal-stagger > *:nth-child(7){animation-delay:.59s}
+
+  .photo-frame{
+    background:#fff; border-radius:16px; padding:22px; display:flex; align-items:center; justify-content:center;
+    box-shadow:var(--shadow); border:1px solid var(--border); margin-bottom:20px;
+    animation:photoReveal .7s cubic-bezier(.16,1,.3,1) both;
+  }
+  .photo-frame img{max-width:100%; max-height:260px; object-fit:contain; display:block;}
+  .badge-tag{
+    display:inline-block; background:var(--ok-soft); color:var(--ok); font-size:11.5px; font-weight:800;
+    text-transform:uppercase; letter-spacing:.06em; padding:5px 12px; border-radius:20px; margin-bottom:10px;
+  }
+  .family-name{font-size:24px; font-weight:750; margin:0 0 2px; line-height:1.25;}
+  .commercial-code{font-family:"SF Mono",Consolas,monospace; color:var(--muted); font-size:14.5px; margin-bottom:18px;}
+  .code-display{
+    font-family:"SF Mono",Consolas,monospace; font-size:clamp(22px,5vw,32px); font-weight:800; letter-spacing:.02em;
+    color:var(--accent); background:var(--accent-soft); border:1px solid var(--border); border-radius:14px;
+    padding:24px; text-align:center; margin:6px 0 20px; word-break:break-all;
+  }
+  .aux-summary{color:var(--muted); font-size:13.5px; margin-bottom:4px;}
 </style>
 </head>
 <body>
@@ -140,25 +171,25 @@
 
 <script>
 const MODELS = [
-  {code:"IR3015 VV 09L", series:"IR3000 VV", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:1500, scc:{900:30}, sccPeak:{900:42}, weight:44, tempMin:-30, tempMax:70},
-  {code:"IR3030 VV 09L", series:"IR3000 VV", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:3000, scc:{900:30}, sccPeak:{900:42}, weight:54, tempMin:-30, tempMax:70},
-  {code:"IR3015 VV 09M", series:"IR3000 VV", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:1500, scc:{900:50}, sccPeak:{900:70}, weight:44, tempMin:-30, tempMax:70},
-  {code:"IR3030 VV 09M", series:"IR3000 VV", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:3000, scc:{900:50}, sccPeak:{900:70}, weight:54, tempMin:-30, tempMax:70},
-  {code:"IR3015 VV 18M", series:"IR3000 VV", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:2300, thermal:1500, scc:{1800:30}, sccPeak:{1800:42}, weight:44, tempMin:-30, tempMax:70},
-  {code:"IR3030 VV 18M", series:"IR3000 VV", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:2300, thermal:3000, scc:{1800:30}, sccPeak:{1800:42}, weight:54, tempMin:-30, tempMax:70},
+  {code:"IR3015 VV 09L", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:1500, scc:{900:30}, sccPeak:{900:42}, weight:44, tempMin:-30, tempMax:70},
+  {code:"IR3030 VV 09L", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:3000, scc:{900:30}, sccPeak:{900:42}, weight:54, tempMin:-30, tempMax:70},
+  {code:"IR3015 VV 09M", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:1500, scc:{900:50}, sccPeak:{900:70}, weight:44, tempMin:-30, tempMax:70},
+  {code:"IR3030 VV 09M", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[900], maxVoltage:1000, insulation:2300, thermal:3000, scc:{900:50}, sccPeak:{900:70}, weight:54, tempMin:-30, tempMax:70},
+  {code:"IR3015 VV 18M", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:2300, thermal:1500, scc:{1800:30}, sccPeak:{1800:42}, weight:44, tempMin:-30, tempMax:70},
+  {code:"IR3030 VV 18M", family:"IR 3000 SERIES VV", image:"images/ir3000-vv.png", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:2300, thermal:3000, scc:{1800:30}, sccPeak:{1800:42}, weight:54, tempMin:-30, tempMax:70},
 
-  {code:"IR4030 VH 18M", series:"IR4000 VH", mount:"Horizontal", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:3000, scc:{1800:100}, sccPeak:{1800:140}, weight:190, tempMin:-40, tempMax:70},
-  {code:"IR4045 VH 18M", series:"IR4000 VH", mount:"Horizontal", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:4500, scc:{1800:100}, sccPeak:{1800:140}, weight:215, tempMin:-40, tempMax:70},
-  {code:"IR4030 VH 36M", series:"IR4000 VH", mount:"Horizontal", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:3000, scc:{3600:55}, sccPeak:{3600:77}, weight:190, tempMin:-40, tempMax:70},
-  {code:"IR4045 VH 36M", series:"IR4000 VH", mount:"Horizontal", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:4500, scc:{3600:55}, sccPeak:{3600:77}, weight:215, tempMin:-40, tempMax:70},
+  {code:"IR4030 VH 18M", family:"IR 4000 SERIES VH", image:"images/ir4000-vh.png", mount:"Horizontal", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:3000, scc:{1800:100}, sccPeak:{1800:140}, weight:190, tempMin:-40, tempMax:70},
+  {code:"IR4045 VH 18M", family:"IR 4000 SERIES VH", image:"images/ir4000-vh.png", mount:"Horizontal", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:4500, scc:{1800:100}, sccPeak:{1800:140}, weight:215, tempMin:-40, tempMax:70},
+  {code:"IR4030 VH 36M", family:"IR 4000 SERIES VH", image:"images/ir4000-vh.png", mount:"Horizontal", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:3000, scc:{3600:55}, sccPeak:{3600:77}, weight:190, tempMin:-40, tempMax:70},
+  {code:"IR4045 VH 36M", family:"IR 4000 SERIES VH", image:"images/ir4000-vh.png", mount:"Horizontal", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:4500, scc:{3600:55}, sccPeak:{3600:77}, weight:215, tempMin:-40, tempMax:70},
 
-  {code:"IR4030 VH DVM", series:"IR4000 VH DVM", mount:"Horizontal", voltages:[1800,3600], maxVoltage:4000, insulation:3700, thermal:3000, scc:{1800:100,3600:55}, sccPeak:{1800:140,3600:77}, weight:190, tempMin:-40, tempMax:70, dual:true},
-  {code:"IR4045 VH DVM", series:"IR4000 VH DVM", mount:"Horizontal", voltages:[1800,3600], maxVoltage:4000, insulation:3700, thermal:4500, scc:{1800:100,3600:55}, sccPeak:{1800:140,3600:77}, weight:215, tempMin:-40, tempMax:70, dual:true},
+  {code:"IR4030 VH DVM", family:"IR 4000 SERIES VH DVM", image:"images/ir4000-vh-dvm.png", mount:"Horizontal", voltages:[1800,3600], maxVoltage:4000, insulation:3700, thermal:3000, scc:{1800:100,3600:55}, sccPeak:{1800:140,3600:77}, weight:190, tempMin:-40, tempMax:70, dual:true},
+  {code:"IR4045 VH DVM", family:"IR 4000 SERIES VH DVM", image:"images/ir4000-vh-dvm.png", mount:"Horizontal", voltages:[1800,3600], maxVoltage:4000, insulation:3700, thermal:4500, scc:{1800:100,3600:55}, sccPeak:{1800:140,3600:77}, weight:215, tempMin:-40, tempMax:70, dual:true},
 
-  {code:"IR4030 VV 18M", series:"IR4000 VV", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:3000, scc:{1800:100}, sccPeak:{1800:140}, weight:165, tempMin:-30, tempMax:70},
-  {code:"IR4045 VV 18M", series:"IR4000 VV", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:4500, scc:{1800:100}, sccPeak:{1800:140}, weight:185, tempMin:-30, tempMax:70},
-  {code:"IR4030 VV 36M", series:"IR4000 VV", mount:"Vertical", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:3000, scc:{3600:55}, sccPeak:{3600:77}, weight:165, tempMin:-30, tempMax:70},
-  {code:"IR4045 VV 36M", series:"IR4000 VV", mount:"Vertical", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:4500, scc:{3600:55}, sccPeak:{3600:77}, weight:185, tempMin:-30, tempMax:70},
+  {code:"IR4030 VV 18M", family:"IR 4000 SERIES VV", image:"images/ir4000-vv.png", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:3000, scc:{1800:100}, sccPeak:{1800:140}, weight:165, tempMin:-30, tempMax:70},
+  {code:"IR4045 VV 18M", family:"IR 4000 SERIES VV", image:"images/ir4000-vv.png", mount:"Vertical", voltages:[1800], maxVoltage:2000, insulation:3700, thermal:4500, scc:{1800:100}, sccPeak:{1800:140}, weight:185, tempMin:-30, tempMax:70},
+  {code:"IR4030 VV 36M", family:"IR 4000 SERIES VV", image:"images/ir4000-vv.png", mount:"Vertical", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:3000, scc:{3600:55}, sccPeak:{3600:77}, weight:165, tempMin:-30, tempMax:70},
+  {code:"IR4045 VV 36M", family:"IR 4000 SERIES VV", image:"images/ir4000-vv.png", mount:"Vertical", voltages:[3600], maxVoltage:4000, insulation:3700, thermal:4500, scc:{3600:55}, sccPeak:{3600:77}, weight:185, tempMin:-30, tempMax:70},
 ];
 
 const CONTROL_VOLTAGES = [24,36,48,72,110];
@@ -222,7 +253,7 @@ function renderProgress(){
 
 function renderStep(){
   const steps = activeSteps();
-  if(current >= steps.length){ renderResults(); return; }
+  if(current >= steps.length){ computeBestFit(); renderBestFit(); return; }
   document.getElementById('results').style.display = 'none';
   const wizard = document.getElementById('wizard');
   wizard.style.display = 'block';
@@ -300,14 +331,13 @@ function modelMatches(m, a, opts={}){
   return true;
 }
 
-function renderResults(){
-  document.getElementById('wizard').style.display = 'none';
-  renderProgress();
-  const el = document.getElementById('results');
-  el.style.display = 'block';
+let bestFit = null;
+let relaxedNote = null;
+let auxVoltage = null;
 
+function computeBestFit(){
   let matches = countMatches(answers);
-  let relaxedNote = null;
+  relaxedNote = null;
 
   if(matches.length === 0){
     // progressively relax least-critical constraints: (if the customer said "no dual-voltage needed")
@@ -332,47 +362,8 @@ function renderResults(){
     return x.weight - y.weight;
   });
 
-  let html = `<h2>Recommended breaker${matches.length!==1?'s':''}</h2>
-    <p class="sub">${summarizeAnswers()}</p>`;
-
-  if(relaxedNote){
-    html += `<div class="note-box">No exact match was found for all criteria, so we relaxed: <b>${relaxedNote.map(prettyRelax).join(', ')}</b>. Review the closest options below with an engineer before finalizing.</div>`;
-  }
-
-  if(matches.length === 0){
-    html += `<div class="empty">No breaker in this catalogue set meets these requirements. Consider adjusting the voltage or current inputs, or contact engineering for a custom configuration.</div>`;
-  } else {
-    matches.forEach((m,i)=>{
-      const sccVoltage = answers.voltage !== undefined && m.scc[answers.voltage] !== undefined ? answers.voltage : m.voltages[0];
-      html += `<div class="card ${i===0?'best':''}">
-        ${i===0 && matches.length>1 ? '<span class="best-tag">Best fit</span>' : ''}
-        <div class="card-head">
-          <div><div class="code">${m.code}</div><div class="series">${m.series}</div></div>
-        </div>
-        <div class="spec-grid">
-          <div class="spec"><div class="k">Mounting</div><div class="v">${m.mount}</div></div>
-          <div class="spec"><div class="k">Rated voltage</div><div class="v">${m.voltages.join(' / ')} Vdc${m.dual?' (dual)':''}</div></div>
-          <div class="spec"><div class="k">Voltage capability</div><div class="v">${m.dual ? 'Dual (1800 & 3600 Vdc)' : 'Single fixed voltage'}</div></div>
-          <div class="spec"><div class="k">Max operational voltage</div><div class="v">${m.maxVoltage} Vdc</div></div>
-          <div class="spec"><div class="k">Thermal current</div><div class="v">${m.thermal} A</div></div>
-          <div class="spec"><div class="k">Short-circuit capacity</div><div class="v">${m.scc[sccVoltage]} kA (${m.sccPeak[sccVoltage]} kA peak)</div></div>
-          <div class="spec"><div class="k">Insulation voltage</div><div class="v">${m.insulation} Vdc</div></div>
-          <div class="spec"><div class="k">Ambient range</div><div class="v">${m.tempMin}°C to +${m.tempMax}°C</div></div>
-          <div class="spec"><div class="k">Weight</div><div class="v">${m.weight} kg</div></div>
-          <div class="spec"><div class="k">Control voltage Uc</div><div class="v">${CONTROL_VOLTAGES.join('/')} Vdc</div></div>
-        </div>
-      </div>`;
-    });
-  }
-
-  html += `<div class="nav" style="margin-top:8px;">
-    <button type="button" class="ghost" id="backBtn2">← Adjust answers</button>
-    <button type="button" class="primary" id="restartBtn">Start over</button>
-  </div>`;
-
-  el.innerHTML = html;
-  document.getElementById('restartBtn').addEventListener('click', ()=>{ answers = {}; current = 0; renderStep(); });
-  document.getElementById('backBtn2').addEventListener('click', ()=>{ current = activeSteps().length-1; renderStep(); });
+  bestFit = matches.length ? matches[0] : null;
+  auxVoltage = null;
 }
 
 function prettyRelax(key){
@@ -387,6 +378,132 @@ function summarizeAnswers(){
   if(answers.thermal !== undefined) parts.push(`≥${answers.thermal} A thermal`);
   if(answers.mount !== undefined && answers.mount !== 'any') parts.push(`${answers.mount.toLowerCase()} mounting`);
   return "Based on: " + (parts.length ? parts.join(' · ') : 'your requirements');
+}
+
+function showPhase(phaseEl){
+  document.getElementById('wizard').style.display = 'none';
+  document.getElementById('results').style.display = 'block';
+  renderProgress();
+  document.getElementById('results').innerHTML = phaseEl;
+}
+
+function renderBestFit(){
+  const m = bestFit;
+
+  if(!m){
+    showPhase(`
+      <h2>No match found</h2>
+      <p class="sub">${summarizeAnswers()}</p>
+      <div class="empty">No breaker in this catalogue set meets these requirements. Consider adjusting the voltage or current inputs, or contact engineering for a custom configuration.</div>
+      <div class="nav" style="margin-top:8px;">
+        <button type="button" class="ghost" id="backBtn2">← Adjust answers</button>
+        <button type="button" class="primary" id="restartBtn">Start over</button>
+      </div>
+    `);
+    wireResultNav();
+    return;
+  }
+
+  const sccVoltage = answers.voltage !== undefined && m.scc[answers.voltage] !== undefined ? answers.voltage : m.voltages[0];
+
+  let html = `<div class="reveal-stagger">`;
+  html += `<div class="photo-frame"><img src="${m.image}" alt="${m.code}"></div>`;
+  html += `<div><span class="badge-tag">Family code selected</span></div>`;
+  html += `<div><h2 class="family-name">${m.family}</h2><div class="commercial-code">${m.code}</div></div>`;
+
+  if(relaxedNote){
+    html += `<div class="note-box">No exact match was found for all criteria, so we relaxed: <b>${relaxedNote.map(prettyRelax).join(', ')}</b>. Review the closest options below with an engineer before finalizing.</div>`;
+  }
+
+  html += `<div class="spec-grid">
+      <div class="spec"><div class="k">Mounting</div><div class="v">${m.mount}</div></div>
+      <div class="spec"><div class="k">Rated voltage</div><div class="v">${m.voltages.join(' / ')} Vdc${m.dual?' (dual)':''}</div></div>
+      <div class="spec"><div class="k">Voltage capability</div><div class="v">${m.dual ? 'Dual (1800 & 3600 Vdc)' : 'Single fixed voltage'}</div></div>
+      <div class="spec"><div class="k">Max operational voltage</div><div class="v">${m.maxVoltage} Vdc</div></div>
+      <div class="spec"><div class="k">Thermal current</div><div class="v">${m.thermal} A</div></div>
+      <div class="spec"><div class="k">Short-circuit capacity</div><div class="v">${m.scc[sccVoltage]} kA (${m.sccPeak[sccVoltage]} kA peak)</div></div>
+      <div class="spec"><div class="k">Insulation voltage</div><div class="v">${m.insulation} Vdc</div></div>
+      <div class="spec"><div class="k">Ambient range</div><div class="v">${m.tempMin}°C to +${m.tempMax}°C</div></div>
+      <div class="spec"><div class="k">Weight</div><div class="v">${m.weight} kg</div></div>
+    </div>`;
+
+  html += `<div class="nav" style="margin-top:8px;">
+      <div class="nav-group">
+        <button type="button" class="ghost" id="backBtn2">← Adjust answers</button>
+        <button type="button" class="ghost" id="restartBtn">Start over</button>
+      </div>
+      <button type="button" class="primary" id="continueBtn">Continue to select unique code →</button>
+    </div>`;
+  html += `</div>`;
+
+  showPhase(html);
+  wireResultNav();
+  document.getElementById('continueBtn').addEventListener('click', renderAuxStep);
+}
+
+function renderAuxStep(){
+  let html = `<div class="reveal-stagger">`;
+  html += `<div class="q-label">Final step</div>
+    <div class="q-title">What auxiliary/control circuit voltage (Uc) does your application use?</div>
+    <div class="q-hint">This is the last configuration detail needed to determine the exact orderable unique code for the ${bestFit.code} (${bestFit.family}).</div>`;
+
+  html += '<div class="options">';
+  CONTROL_VOLTAGES.forEach((v,i)=>{
+    const sel = auxVoltage === v;
+    html += `<button type="button" class="opt${sel?' selected':''}" data-index="${i}">
+      <span class="radio"></span>
+      <span class="otext"><span class="oname">${v} Vdc</span></span>
+    </button>`;
+  });
+  html += '</div>';
+
+  html += `<div class="nav">
+      <button type="button" class="ghost" id="backBtn3">← Back</button>
+      <button type="button" class="primary" id="revealBtn" ${auxVoltage===null?'disabled':''}>Reveal unique code →</button>
+    </div>`;
+  html += `</div>`;
+
+  showPhase(html);
+
+  document.querySelectorAll('#results .opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      auxVoltage = CONTROL_VOLTAGES[Number(btn.dataset.index)];
+      renderAuxStep();
+    });
+  });
+  document.getElementById('backBtn3').addEventListener('click', renderBestFit);
+  document.getElementById('revealBtn').addEventListener('click', ()=>{ if(auxVoltage!==null) renderFinalCode(); });
+}
+
+function generateUniqueCode(code, uc){
+  return code.replace(/ /g, '-') + '-UC' + uc;
+}
+
+function renderFinalCode(){
+  const m = bestFit;
+  const code = generateUniqueCode(m.code, auxVoltage);
+
+  let html = `<div class="reveal-stagger">`;
+  html += `<div><span class="badge-tag">Unique code selected</span></div>`;
+  html += `<div class="aux-summary">${m.family} · ${m.code} · Auxiliary voltage ${auxVoltage} Vdc</div>`;
+  html += `<div class="code-display">${code}</div>`;
+  html += `<div class="note-box">This unique code is a system-generated reference (not the manufacturer's official ordering code) built from the commercial code and auxiliary voltage. Confirm the exact part number with the manufacturer before ordering.</div>`;
+  html += `<div class="nav" style="margin-top:8px;">
+      <button type="button" class="ghost" id="backBtn4">← Back</button>
+      <button type="button" class="primary" id="restartBtn2">Start over</button>
+    </div>`;
+  html += `</div>`;
+
+  showPhase(html);
+  document.getElementById('backBtn4').addEventListener('click', renderAuxStep);
+  document.getElementById('restartBtn2').addEventListener('click', ()=>{ answers = {}; current = 0; renderStep(); });
+}
+
+function wireResultNav(){
+  const restartBtn = document.getElementById('restartBtn');
+  if(restartBtn) restartBtn.addEventListener('click', ()=>{ answers = {}; current = 0; renderStep(); });
+  const backBtn2 = document.getElementById('backBtn2');
+  if(backBtn2) backBtn2.addEventListener('click', ()=>{ current = activeSteps().length-1; renderStep(); });
 }
 
 renderStep();
